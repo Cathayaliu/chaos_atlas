@@ -1,0 +1,9 @@
+﻿# Files that are not part of the public site
+promo/
+frames/
+frames_test/
+*.mp4
+*.wav
+*.log
+.DS_Store
+Thumbs.db

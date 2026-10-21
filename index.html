@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="js">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080a09">
+  <meta name="description" content="混沌测绘志：一部关于奇异吸引子与李雅普诺夫指数的实时互动图谱。所有轨道均在浏览器中实时积分。">
+  <title>混沌测绘志 — CHAOS ATLAS</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23080a09'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='44' font-style='italic' fill='%23efeadd' text-anchor='middle'%3E%CE%BB%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="is-locked">
+  <a class="skip-link" href="#main">跳至正文</a>
+
+  <!-- Loading curtain -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader__top mono">
+      <span>CHAOS ATLAS</span>
+      <span>VOL. 01 / MMXXVI</span>
+    </div>
+    <div class="preloader__center">
+      <div class="preloader__lambda">λ</div>
+      <div class="preloader__readout">
+        <div class="preloader__state mono"><span>正在校准相空间</span><span>INITIALISING PHASE SPACE</span></div>
+        <div class="preloader__track"><span id="loadBar"></span></div>
+        <div class="preloader__numbers mono"><span id="loadPct">000</span><span>%</span></div>
+      </div>
+    </div>
+    <div class="preloader__bottom mono">
+      <span>DETERMINISTIC · BOUNDED · APERIODIC</span>
+      <span id="loadHint">LORENZ SYSTEM ONLINE</span>
+    </div>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"><span class="cursor__ring"></span><span class="cursor__dot"></span></div>
+  <div class="page-progress" aria-hidden="true"><span id="pageProgress"></span></div>
+
+  <!-- Persistent navigation -->
+  <header class="site-head" id="siteHeader">
+    <a class="brand" href="#top" aria-label="混沌测绘志，回到顶部">
+      <span class="brand__mark">λ</span>
+      <span class="brand__words">
+        <span class="brand__cn">混沌测绘志</span>
+        <span class="brand__en">CHAOS ATLAS</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="主要章节">
+      <a href="#observatory"><span class="nav-num">01</span><span>吸引子</span></a>
+      <a href="#sensitivity"><span class="nav-num">02</span><span>敏感</span></a>
+      <a href="#spectrum"><span class="nav-num">03</span><span>指数</span></a>
+      <a href="#bifurcation"><span class="nav-num">04</span><span>分岔</span></a>
+      <a href="#archive"><span class="nav-num">05</span><span>档案</span></a>
+    </nav>
+    <div class="head-meta">
+      <span class="head-status"><i></i> LIVE</span>
+      <time id="navClock" datetime="">--:--:--</time>
+      <span class="head-tz">CST</span>
+    </div>
+    <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="siteMenu">
+      <span>INDEX</span>
+      <span class="menu-toggle__lines" aria-hidden="true"><i></i><i></i></span>
+    </button>
+  </header>
+
+  <div class="menu" id="siteMenu" aria-hidden="true">
+    <div class="menu__head mono"><span>INDEX / 图谱目录</span><span>SCROLL OR SELECT</span></div>
+    <nav class="menu__nav" aria-label="章节目录">
+      <a href="#observatory"><span>01</span><em>吸引子</em><small>THE ATTRACTOR</small></a>
+      <a href="#sensitivity"><span>02</span><em>敏感</em><small>SENSITIVITY</small></a>
+      <a href="#spectrum"><span>03</span><em>指数</em><small>THE EXPONENT</small></a>
+      <a href="#bifurcation"><span>04</span><em>分岔</em><small>THE BIFURCATION</small></a>
+      <a href="#archive"><span>05</span><em>档案</em><small>THE ARCHIVE</small></a>
+    </nav>
+    <div class="menu__foot mono"><span>λ₁ &gt; 0</span><span>不确定，是确定性的形状。</span></div>
+  </div>
+
+  <main id="main">
+    <!-- 00 / HERO -->
+    <section class="hero" id="top">
+      <div class="hero__canvas-wrap" aria-hidden="true">
+        <canvas id="heroCanvas"></canvas>
+      </div>
+      <div class="hero__grid" aria-hidden="true"></div>
+      <div class="hero__aura" aria-hidden="true"></div>
+      <div class="hero__veil" aria-hidden="true"></div>
+
+      <div class="hero__inner container">
+        <div class="hero__top mono">
+          <span class="hero__top-left"><i class="hero__tick"></i> A FIELD GUIDE TO NONLINEAR SYSTEMS</span>
+          <span class="hero__top-right">1963 — PRESENT · 3D FLOWS</span>
+        </div>
+
+        <div class="hero__main">
+          <div class="hero__title-block">
+            <p class="hero__eyebrow mono"><span>EDWARD N. LORENZ</span><span>/</span><span>SENSITIVE DEPENDENCE</span></p>
+            <h1 class="hero__title" aria-label="混沌">
+              <span class="hero__char hero__char--solid" aria-hidden="true">混</span><span class="hero__char hero__char--line" aria-hidden="true">沌</span><span class="hero__title-mark" aria-hidden="true">*</span>
+            </h1>
+            <p class="hero__subtitle">在确定性的缝隙里，<br><em>看见秩序的另一副面孔。</em></p>
+          </div>
+
+          <aside class="hero__aside">
+            <div class="hero__lambda">
+              <span class="mono">LARGEST EXPONENT</span>
+              <strong id="heroLambda">+0.9056</strong>
+              <span class="mono">λ₁ · Nats / unit time</span>
+            </div>
+            <p class="hero__note">同一组方程，<br>无穷种未来。</p>
+            <div class="hero__orbital" aria-hidden="true">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="49" fill="none" stroke="currentColor" stroke-width=".5" opacity=".35"/>
+                <circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width=".5" stroke-dasharray="1 5" opacity=".55"/>
+                <path d="M60 11c19 13 30 32 30 49S79 96 60 109 30 96 30 60s11-36 30-49Z" fill="none" stroke="currentColor" stroke-width=".75"/>
+                <circle cx="82" cy="35" r="2.2" fill="currentColor"/>
+              </svg>
+            </div>
+          </aside>
+        </div>
+
+        <div class="hero__bottom">
+          <a class="hero__enter" href="#observatory">
+            <span class="hero__enter-icon" aria-hidden="true"><i></i></span>
+            <span>进入图谱 <em>ENTER THE ATLAS</em></span>
+          </a>
+          <div class="hero__telemetry mono" aria-hidden="true">
+            <span>LORENZ / 63</span>
+            <span>σ 10.000</span>
+            <span>ρ 28.000</span>
+            <span>β 2.667</span>
+            <span class="hero__coord" id="heroCoord">X +00.000 &nbsp; Y +00.000 &nbsp; Z +00.000</span>
+          </div>
+          <span class="hero__drag mono">DRAG TO DISTURB · 拖动以扰动</span>
+        </div>
+      </div>
+
+      <div class="hero__side-label mono" aria-hidden="true">STRANGE ATTRACTORS / LYAPUNOV EXPONENTS / DETERMINISTIC CHAOS</div>
+      <div class="hero__scroll mono" aria-hidden="true"><span>SCROLL</span><i></i></div>
+    </section>
+
+    <!-- 00 / INTRO -->
+    <section class="intro" id="intro">
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__track">
+          <span>SENSITIVE DEPENDENCE ON INITIAL CONDITIONS</span><i>*</i>
+          <span>DETERMINISM IS NOT PREDICTABILITY</span><i>*</i>
+          <span>ORDER HIDES INSIDE CHAOS</span><i>*</i>
+          <span>SENSITIVE DEPENDENCE ON INITIAL CONDITIONS</span><i>*</i>
+          <span>DETERMINISM IS NOT PREDICTABILITY</span><i>*</i>
+          <span>ORDER HIDES INSIDE CHAOS</span><i>*</i>
+        </div>
+      </div>
+
+      <div class="container intro__inner">
+        <div class="intro__label mono" data-reveal><span>00</span><span>ORIENTATION / 序言</span></div>
+        <div class="intro__headline">
+          <h2 class="display" data-reveal>一个由<em>规则</em><span class="intro-phrase">写成的世界，</span><br class="intro-br">为什么拒绝重复？</h2>
+          <div class="intro__lede" data-reveal data-delay="1">
+            <p>没有随机数，没有外力，没有骰子。三个变量、三条方程，便足以让未来失去可计算性。</p>
+            <p>混沌不是秩序的缺席。它是秩序在有限空间里，<strong>无穷次折叠自己</strong>。</p>
+          </div>
+        </div>
+
+        <div class="intro__lower">
+          <div class="axioms">
+            <article class="axiom" data-reveal>
+              <span class="axiom__num mono">01</span>
+              <div><h3>确定 <em>Deterministic</em></h3><p>没有偶然。下一瞬间，被这一瞬间唯一决定。</p></div>
+            </article>
+            <article class="axiom" data-reveal data-delay="1">
+              <span class="axiom__num mono">02</span>
+              <div><h3>有界 <em>Bounded</em></h3><p>轨道永不逃逸，被捕获在一个有限的几何体内，却永不重复。</p></div>
+            </article>
+            <article class="axiom" data-reveal data-delay="2">
+              <span class="axiom__num mono">03</span>
+              <div><h3>敏感 <em>Sensitive</em></h3><p>任意微小的误差，都会以指数速度，长成另一种未来。</p></div>
+            </article>
+          </div>
+
+          <figure class="lorenz-card" data-reveal data-delay="1">
+            <div class="lorenz-card__head mono"><span>LORENZ — 63</span><span>ODE / 3 VARIABLES</span></div>
+            <div class="lorenz-card__eq" aria-label="洛伦茨方程：x导数等于sigma乘y减x；y导数等于x乘rho减z再减y；z导数等于xy减beta z">
+              <div><span class="eq-d">dx/dt</span><span class="eq-op">=</span><span>σ ( y − x )</span></div>
+              <div><span class="eq-d">dy/dt</span><span class="eq-op">=</span><span>x ( ρ − z ) − y</span></div>
+              <div><span class="eq-d">dz/dt</span><span class="eq-op">=</span><span>x y − β z</span></div>
+            </div>
+            <div class="lorenz-card__foot mono"><span>σ 10</span><span>ρ 28</span><span>β 8/3</span><span>(x₀,y₀,z₀) = (1,1,1)</span><span class="lorenz-card__lambda">λ₁ &gt; 0</span></div>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 01 / OBSERVATORY -->
+    <section class="observatory" id="observatory">
+      <div class="container">
+        <header class="chapter-head">
+          <div class="chapter-head__index mono" data-reveal><span>01</span><span>/ 05</span></div>
+          <div class="chapter-head__title">
+            <p class="kicker mono" data-reveal>THE ATTRACTOR / 奇异吸引子</p>
+            <h2 class="display" data-reveal data-delay="1">运动最终栖居的<br><em>形状</em>。</h2>
+          </div>
+          <p class="chapter-head__intro" data-reveal data-delay="2">吸引子不是一条轨道，而是轨道最终趋近的集合。它没有体积，却收纳了无穷多条未来。此刻，它正在你的屏幕上被实时计算。</p>
+        </header>
+
+        <div class="instrument" id="labShell" data-reveal>
+          <div class="instrument__bar">
+            <div class="instrument__bar-left mono">
+              <span class="live-pill"><i></i> LIVE SIMULATION</span>
+              <span class="bar-sep">/</span>
+              <span>PHASE SPACE · 3D</span>
+            </div>
+            <div class="instrument__bar-right mono">
+              <span>RK4 · ADAPTIVE VIEW</span>
+              <span class="bar-sep">/</span>
+              <span id="labTime">T +000.00</span>
+            </div>
+          </div>
+
+          <div class="instrument__body">
+            <div class="lab-stage" id="labStage">
+              <canvas id="labCanvas" aria-hidden="true"></canvas>
+              <canvas id="tracerCanvas" aria-hidden="true"></canvas>
+              <div class="lab-stage__atmosphere" aria-hidden="true"></div>
+              <div class="lab-stage__grid" aria-hidden="true"></div>
+              <div class="lab-stage__corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+              <div class="lab-stage__top">
+                <div class="system-ident">
+                  <span class="system-ident__index mono" id="systemIndex">SYS. 01</span>
+                  <div class="system-ident__names">
+                    <h3 id="systemTitle">LORENZ</h3>
+                    <p><span id="systemChinese">洛伦茨吸引子</span><em id="systemYear">1963</em></p>
+                  </div>
+                </div>
+                <div class="axis-gizmo" aria-hidden="true">
+                  <canvas id="axisGizmo" width="84" height="84"></canvas>
+                  <span class="mono">ORBIT VIEW</span>
+                </div>
+              </div>
+
+              <div class="lab-stage__bottom">
+                <span class="stage-coords mono" id="labCoords">x +00.000 &nbsp; y +00.000 &nbsp; z +00.000</span>
+                <span class="stage-hint mono">拖动旋转 · 滚轮缩放 · 双击归位</span>
+              </div>
+
+              <div class="lab-stage__status mono" id="labStageStatus">
+                <span class="stage-status__dot"></span>
+                <span>INTEGRATING</span>
+                <span id="labParticles">8,000 PATHS</span>
+              </div>
+            </div>
+
+            <aside class="lab-panel">
+              <div class="lab-panel__scroll">
+                <div class="lab-panel__head">
+                  <span class="panel-label mono">SYSTEM / 系统</span>
+                  <span class="panel-count mono"><span id="systemCount">01</span> / 06</span>
+                </div>
+                <div class="system-list" id="systemList" role="group" aria-label="选择动力系统">
+                  <!-- generated -->
+                </div>
+
+                <div class="panel-rule"></div>
+
+                <div class="lab-panel__head">
+                  <span class="panel-label mono">PARAMETERS / 参数</span>
+                  <button class="text-button mono" id="resetSystemBtn" type="button" title="恢复当前系统的标准参数">RESET</button>
+                </div>
+                <div class="parameter-list" id="parameterList">
+                  <!-- generated -->
+                </div>
+
+                <div class="lab-panel__note">
+                  <p id="systemNote">大气对流的极简模型。它在确定性的方程里，第一次显影了“蝴蝶效应”。</p>
+                  <span class="mono">CANONICAL VALUES RESTORED ON RESET</span>
+                </div>
+              </div>
+
+              <div class="lab-actions">
+                <button class="icon-button" id="pauseBtn" type="button" aria-pressed="false">
+                  <span class="icon-button__icon" id="pauseIcon" aria-hidden="true"><i></i><i></i></span>
+                  <span class="mono" id="pauseLabel">PAUSE</span>
+                </button>
+                <button class="icon-button" id="reseedBtn" type="button">
+                  <span class="icon-button__icon icon-button__icon--reseed" aria-hidden="true">↻</span>
+                  <span class="mono">RESEED</span>
+                </button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="instrument__readout">
+            <div class="readout__title">
+              <span class="mono">LYAPUNOV SPECTRUM</span>
+              <span class="mono readout__sub">实时有限时间估计</span>
+            </div>
+            <div class="spectrum-mini" aria-hidden="true">
+              <div class="mini-row" data-mini="0">
+                <span class="mini-sym">λ<sub>1</sub></span>
+                <div class="mini-track"><i></i></div>
+                <span class="mini-val" id="miniL1">+0.000</span>
+              </div>
+              <div class="mini-row" data-mini="1">
+                <span class="mini-sym">λ<sub>2</sub></span>
+                <div class="mini-track"><i></i></div>
+                <span class="mini-val" id="miniL2">+0.000</span>
+              </div>
+              <div class="mini-row" data-mini="2">
+                <span class="mini-sym">λ<sub>3</sub></span>
+                <div class="mini-track"><i></i></div>
+                <span class="mini-val" id="miniL3">−0.000</span>
+              </div>
+            </div>
+            <div class="readout__metrics">
+              <div class="metric">
+                <span class="mono">Σ λ</span>
+                <strong id="labSum">−13.667</strong>
+              </div>
+              <div class="metric">
+                <span class="mono">D<sub>KY</sub></span>
+                <strong id="labDim">2.062</strong>
+              </div>
+              <div class="metric metric--status">
+                <span class="mono">REGIME</span>
+                <strong id="labRegime"><i></i> CHAOTIC</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lab-caption">
+          <p data-reveal><span class="mono">FIG. 01</span> 粒子并非装饰。每一个光点都在进行四阶龙格–库塔积分，沿着当前系统的流运动。左侧的指数由同一组方程通过变分方程与 QR 正交化实时估算。</p>
+          <div class="lab-caption__links mono" data-reveal>
+            <span>8000+ TRAJECTORIES</span>
+            <span>REALTIME VARIATIONAL EQUATIONS</span>
+            <span>BENETTIN / QR</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 / SENSITIVITY -->
+    <section class="paper sensitivity" id="sensitivity">
+      <div class="container">
+        <header class="paper-head">
+          <div class="paper-head__index mono"><span>02</span><span>/ 05</span></div>
+          <div class="paper-head__title">
+            <p class="kicker mono" data-reveal>EXPERIMENT 01 / SENSITIVE DEPENDENCE</p>
+            <h2 class="display" data-reveal data-delay="1">一毫米的偏差，<br><em>一场不同的风暴。</em></h2>
+          </div>
+          <p class="paper-head__intro" data-reveal data-delay="2">把两条轨道的起点分开一个原子核的宽度。它们会沿着几乎相同的路径出发，然后在某个不可预知的时刻，彻底分道扬镳。</p>
+        </header>
+
+        <div class="twin-experiment">
+          <div class="twin-chart" data-reveal>
+            <div class="twin-chart__head">
+              <div>
+                <span class="mono">FIG. 02 — TWIN ORBIT DIVERGENCE</span>
+                <h3>分离，<em>以指数为节拍</em></h3>
+              </div>
+              <div class="chart-legend">
+                <span><i class="legend-line legend-line--ink"></i>观测到的 δ(t)</span>
+                <span><i class="legend-line legend-line--accent"></i>理论斜率 λ₁</span>
+              </div>
+            </div>
+            <div class="twin-chart__canvas-wrap">
+              <canvas id="twinCanvas" role="img" aria-label="两条初始相距极小距离的洛伦茨轨道分离距离随时间的半对数图，实际曲线以指数速度上升，直至饱和。"></canvas>
+              <div class="twin-chart__stamp mono">LOG₁₀ δ(t)</div>
+            </div>
+            <div class="twin-chart__foot">
+              <span class="mono">LORENZ–63 / RK4 Δt 0.005</span>
+              <span class="mono">t →</span>
+              <span class="mono">Δ = 1.0 代表相空间中的宏观距离</span>
+            </div>
+          </div>
+
+          <aside class="twin-controls" data-reveal data-delay="1">
+            <div class="twin-controls__head">
+              <span class="mono">INITIAL SEPARATION</span>
+              <span class="mono">δ₀</span>
+            </div>
+            <div class="delta-display">
+              <span class="delta-mantissa" id="deltaMantissa">1.00</span>
+              <span class="delta-times">×</span>
+              <span class="delta-base">10</span><sup id="deltaExp">−6</sup>
+              <em>δ₀ · 初始差异</em>
+            </div>
+            <input class="range range--log" id="deltaSlider" type="range" min="0" max="1000" value="375" step="1" aria-label="初始差异大小，从十的负九次方到十的负一次方">
+            <div class="range-labels mono"><span>10⁻⁹</span><span>10⁻⁵</span><span>10⁻¹</span></div>
+            <div class="preset-row" role="group" aria-label="初始差异预设">
+              <button type="button" class="preset mono" data-delta="1e-9">10⁻⁹</button>
+              <button type="button" class="preset is-active mono" data-delta="1e-6">10⁻⁶</button>
+              <button type="button" class="preset mono" data-delta="1e-3">10⁻³</button>
+            </div>
+
+            <div class="twin-data">
+              <div class="twin-data__row">
+                <span class="mono">当前分离 δ(t)</span>
+                <strong id="twinCurrent">0.000e+0</strong>
+              </div>
+              <div class="twin-data__row">
+                <span class="mono">预测半径 τ</span>
+                <strong id="twinHorizon">13.72 <small>tu</small></strong>
+              </div>
+              <div class="twin-data__row">
+                <span class="mono">e-folding 时间</span>
+                <strong id="twinEfold">1.10 <small>tu</small></strong>
+              </div>
+              <div class="twin-data__row">
+                <span class="mono">实测 λ₁</span>
+                <strong id="twinLambda">+0.9056</strong>
+              </div>
+            </div>
+
+            <button class="primary-button" id="replayTwin" type="button">
+              <span>重新发射 <em>REPLAY</em></span>
+              <span aria-hidden="true">↗</span>
+            </button>
+            <p class="twin-controls__foot mono">Δ(t) ≈ Δ₀ e<sup>λ₁t</sup><br>预测半径：误差长到宏观尺度所需时间</p>
+          </aside>
+        </div>
+
+        <div class="sensitivity-notes">
+          <div data-reveal>
+            <span class="mono">A / NOT A BUG</span>
+            <p>这种分歧不是浮点误差制造的幻觉。它是洛伦茨系统真实的几何性质：相邻轨道沿不稳定方向被指数拉伸。</p>
+          </div>
+          <div data-reveal data-delay="1">
+            <span class="mono">B / THE HORIZON</span>
+            <p>天气预报的极限并不来自仪器精度，而来自系统本身。把精度提高一千倍，也只能将可预测期延长 λ⁻¹ ln 1000。</p>
+          </div>
+          <div data-reveal data-delay="2">
+            <span class="mono">C / A NEW ORDER</span>
+            <p>轨道不可预测，吸引子的形状却稳定得惊人。混沌的悖论是：放弃单条未来，才能看见未来的整体。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 / SPECTRUM -->
+    <section class="spectrum-section" id="spectrum">
+      <div class="spectrum-section__watermark" aria-hidden="true">λ</div>
+      <div class="container">
+        <header class="spectrum-head">
+          <div class="paper-head__index mono"><span>03</span><span>/ 05</span></div>
+          <div>
+            <p class="kicker mono" data-reveal>THE LYAPUNOV EXPONENT / 李雅普诺夫指数</p>
+            <h2 class="display" data-reveal data-delay="1">未来，<br><em>以指数速度分手。</em></h2>
+          </div>
+          <p class="spectrum-head__intro" data-reveal data-delay="2">一个数字，足以辨别秩序与混沌。λ 度量相空间中的平均拉伸率：正数制造分歧，负数负责遗忘。</p>
+        </header>
+
+        <div class="spectrum-main">
+          <div class="spectrum-essay">
+            <div class="essay-block" data-reveal>
+              <span class="mono">DEFINITION / 定义</span>
+              <p class="essay-lead">相邻轨道之间的分离，平均而言服从一条优雅的指数律：</p>
+              <div class="equation equation--large" aria-label="δ(t) 约等于 δ0 乘以 e 的 lambda t 次方">
+                <span>δ(t)</span><span class="eq-sym">≈</span><span>δ<sub>0</sub> e<sup>λ t</sup></span>
+              </div>
+              <p>李雅普诺夫指数 λ 正是这条指数曲线的斜率。对三维连续流，有三个方向、三个指数：</p>
+            </div>
+
+            <div class="lambda-definitions">
+              <article data-reveal>
+                <span class="lambda-symbol positive">λ₁</span>
+                <div><h4>拉伸 <em>Stretch</em></h4><p>若 λ₁ &gt; 0，相邻轨道指数分离。这，就是混沌的数学签名。</p></div>
+              </article>
+              <article data-reveal data-delay="1">
+                <span class="lambda-symbol neutral">λ₂</span>
+                <div><h4>漂移 <em>Flow</em></h4><p>沿轨道自身的方向，距离不增不减，指数通常为零。</p></div>
+              </article>
+              <article data-reveal data-delay="2">
+                <span class="lambda-symbol negative">λ₃</span>
+                <div><h4>收缩 <em>Fold</em></h4><p>强烈的负指数把轨道压回吸引子，造成耗散与折叠。</p></div>
+              </article>
+            </div>
+
+          </div>
+
+          <aside class="spectrum-panel" data-reveal data-delay="1">
+            <div class="spectrum-panel__head">
+              <div><span class="mono">LIVE SPECTRUM</span><h3 id="spectrumSystem">LORENZ</h3></div>
+              <span class="panel-live mono"><i></i> REAL TIME</span>
+            </div>
+            <div class="spectrum-rows">
+              <div class="spec-row" data-spec="0">
+                <div class="spec-row__top">
+                  <span class="spec-symbol">λ<sub>1</sub></span>
+                  <span class="spec-name mono">UNSTABLE / 拉伸</span>
+                  <strong class="spec-value" id="specL1">+0.9056</strong>
+                </div>
+                <div class="spec-track"><span class="spec-zero"></span><i class="spec-fill"></i></div>
+              </div>
+              <div class="spec-row" data-spec="1">
+                <div class="spec-row__top">
+                  <span class="spec-symbol">λ<sub>2</sub></span>
+                  <span class="spec-name mono">NEUTRAL / 漂移</span>
+                  <strong class="spec-value" id="specL2">+0.0000</strong>
+                </div>
+                <div class="spec-track"><span class="spec-zero"></span><i class="spec-fill"></i></div>
+              </div>
+              <div class="spec-row" data-spec="2">
+                <div class="spec-row__top">
+                  <span class="spec-symbol">λ<sub>3</sub></span>
+                  <span class="spec-name mono">STABLE / 收缩</span>
+                  <strong class="spec-value" id="specL3">−14.5721</strong>
+                </div>
+                <div class="spec-track"><span class="spec-zero"></span><i class="spec-fill"></i></div>
+              </div>
+            </div>
+            <div class="spectrum-panel__metrics">
+              <div><span class="mono">Σ λ / 体积收缩率</span><strong id="specSum">−13.6665</strong></div>
+              <div><span class="mono">D<sub>KY</sub> / 分形维数</span><strong id="specDim">2.0621</strong></div>
+              <div><span class="mono">REGIME / 当前状态</span><strong class="spec-regime" id="specRegime"><i></i> CHAOTIC</strong></div>
+            </div>
+            <div class="spectrum-panel__method">
+              <span class="mono">NUMERICAL METHOD</span>
+              <p>变分方程与状态方程同步积分；每隔固定时间对切空间基进行 Gram–Schmidt 正交化，累加对数拉伸率。</p>
+              <span class="mono">BENETTIN ET AL. / 1980</span>
+            </div>
+          </aside>
+        </div>
+
+        <div class="spectrum-notes-grid">
+          <div class="essay-footnote" data-reveal>
+            <div class="footnote-equation">Σ λ = λ₁ + λ₂ + λ₃ = ⟨∇ · f⟩ &lt; 0</div>
+            <p>三个指数之和等于相空间散度的长期平均。体积持续收缩，是耗散系统能够拥有吸引子的原因。轨道被“挤”进一个零体积集合，同时在集合内部被反复拉伸与折叠。</p>
+          </div>
+
+          <div class="kaplan" data-reveal data-delay="1">
+            <div class="kaplan__head mono"><span>KAPLAN–YORKE DIMENSION</span><span>FRACTAL DIMENSION</span></div>
+            <p class="kaplan__eq">D<sub>KY</sub> = 2 + <span class="frac"><span>λ₁ + λ₂</span><span>|λ₃|</span></span></p>
+            <p>吸引子的维数不必是整数。当 λ₁ + λ₂ &gt; 0 时，吸引子拥有介于 2 与 3 之间的分形维度——它比表面多，比体积少。</p>
+          </div>
+        </div>
+
+        <div class="history-card" data-reveal>
+          <div class="history-card__head">
+            <div>
+              <span class="mono">FINITE-TIME CONVERGENCE / 有限时间收敛</span>
+              <h3>λ₁ 如何长成一个数字</h3>
+            </div>
+            <div class="history-meta">
+              <span class="mono">SYSTEM <b id="historySystem">LORENZ</b></span>
+              <span class="mono">INTEGRATED <b id="historyTime">0.0</b> tu</span>
+            </div>
+          </div>
+          <div class="history-canvas-wrap">
+            <canvas id="historyCanvas" role="img" aria-label="最大李雅普诺夫指数随时间变化的有限时间估计曲线，逐渐收敛到约零点九。"></canvas>
+          </div>
+          <div class="history-legend mono">
+            <span><i class="history-dot"></i> λ₁ 的有限时间估计</span>
+            <span><i class="history-line"></i> 当前估计</span>
+            <span class="history-caveat">有限时间估计会持续波动——收敛本身也需要时间。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 / BIFURCATION -->
+    <section class="paper bifurcation" id="bifurcation">
+      <div class="container">
+        <header class="paper-head paper-head--bifurcation">
+          <div class="paper-head__index mono"><span>04</span><span>/ 05</span></div>
+          <div class="paper-head__title">
+            <p class="kicker mono" data-reveal>THE BIFURCATION / 通往混沌之路</p>
+            <h2 class="display" data-reveal data-delay="1">当参数轻轻转动，<br><em>秩序开始分岔。</em></h2>
+          </div>
+          <p class="paper-head__intro" data-reveal data-delay="2">把一条简单的抛物线反复映回自身。随着参数 r 改变，周期一分为二，二分为四，最终溶入一片混沌。这是宇宙最著名的岔路之一。</p>
+        </header>
+
+        <div class="bifurcation-layout">
+          <div class="bifurcation-chart" data-reveal>
+            <div class="bifurcation-chart__head">
+              <div>
+                <span class="mono">FIG. 04 — LOGISTIC FAMILY</span>
+                <h3>x<sub>n+1</sub> = r x<sub>n</sub> (1 − x<sub>n</sub>)</h3>
+              </div>
+              <div class="mono bifurcation-legend">
+                <span><i></i>1000 TRANSIENTS × 210 ITERATES</span>
+                <span class="bifurcation-legend__hint">拖动图表以扫描 r / DRAG TO SCAN</span>
+              </div>
+            </div>
+            <div class="bifurcation-plot" id="bifurcationPlot">
+              <canvas id="bifurcationBase" aria-hidden="true"></canvas>
+              <canvas id="bifurcationOverlay" role="img" aria-label="逻辑斯蒂映射的分岔图。横轴参数 r 从 2.8 到 4，纵轴为长期迭代值。图形展示了由周期倍增通向混沌的过程。"></canvas>
+            </div>
+            <div class="bifurcation-slider">
+              <div class="bifurcation-slider__head">
+                <span class="mono">PARAMETER r</span>
+                <strong id="bifR">3.9000</strong>
+              </div>
+              <input class="range" id="rSlider" type="range" min="2.8" max="4" value="3.9" step="0.0001" aria-label="逻辑斯蒂映射参数 r">
+              <div class="range-labels mono"><span>2.8</span><span>3.2</span><span>3.5699 混沌入口</span><span>4.0</span></div>
+            </div>
+            <div class="preset-row preset-row--bif" role="group" aria-label="参数 r 预设">
+              <button class="preset mono" type="button" data-r="2.9">P1 · 2.900</button>
+              <button class="preset mono" type="button" data-r="3.2">P2 · 3.200</button>
+              <button class="preset mono" type="button" data-r="3.5">P4 · 3.500</button>
+              <button class="preset mono" type="button" data-r="3.5699">ONSET · 3.5699</button>
+              <button class="preset mono" type="button" data-r="3.83">WINDOW · 3.830</button>
+              <button class="preset is-active mono" type="button" data-r="3.9">CHAOS · 3.900</button>
+            </div>
+          </div>
+
+          <aside class="cobweb" data-reveal data-delay="1">
+            <div class="cobweb__head">
+              <span class="mono">ORBIT READOUT</span>
+              <span class="mono" id="bifClass">CHAOTIC</span>
+            </div>
+            <div class="cobweb__canvas-wrap">
+              <canvas id="cobwebCanvas" role="img" aria-label="当前参数下的逻辑斯蒂映射蛛网图，显示迭代轨道在抛物线与对角线之间的折返。"></canvas>
+              <span class="mono cobweb__axis cobweb__axis--x">xₙ</span>
+              <span class="mono cobweb__axis cobweb__axis--y">xₙ₊₁</span>
+            </div>
+            <div class="cobweb__period">
+              <span class="mono">PERIOD / 周期</span>
+              <strong id="bifPeriod">∞</strong>
+            </div>
+            <div class="cobweb__metrics">
+              <div><span class="mono">λ<sub>map</sub></span><strong id="bifLambda">+0.4956</strong></div>
+              <div><span class="mono">r</span><strong id="bifRReadout">3.9000</strong></div>
+              <div><span class="mono">x</span><strong id="bifOrbit">0.1234</strong></div>
+            </div>
+            <p class="cobweb__note">在周期窗口中，混沌会短暂地退回秩序。r ≈ 3.83 附近的三周期窗口，是分岔图里最著名的一道缝隙。</p>
+            <div class="cobweb__universal">
+              <div class="cobweb__universal-head mono"><span>UNIVERSALITY</span><span>FEIGENBAUM CONSTANTS</span></div>
+              <div class="cobweb__constants">
+                <div><span class="mono">δ</span><strong>4.6692</strong></div>
+                <div><span class="mono">α</span><strong>2.5029</strong></div>
+              </div>
+              <p>无数系统沿着同一条路走进混沌，并共享同一组数字。</p>
+            </div>
+          </aside>
+        </div>
+
+        <div class="bifurcation-notes">
+          <div data-reveal>
+            <span class="mono">01 / THE CASCADE</span>
+            <p>倍周期分岔以几何级数加速。相邻分岔点的间距比趋于一个常数：<em>δ = 4.66920…</em>。费根鲍姆常数说明，混沌的入口具有普适性。</p>
+          </div>
+          <div data-reveal data-delay="1">
+            <span class="mono">02 / A WINDOW OF ORDER</span>
+            <p>混沌不是彻底的无序。在混沌深处，仍嵌着周期窗口：稳定的三周期、五周期轨道像岛一样浮在混沌之海上。</p>
+          </div>
+          <div data-reveal data-delay="2">
+            <span class="mono">03 / A UNIVERSAL ROAD</span>
+            <p>从流体、电路到种群动力学，无数系统沿着同一条倍周期道路进入混沌。简单的规则，共享复杂的几何。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 / ARCHIVE -->
+    <section class="archive" id="archive">
+      <div class="container">
+        <header class="archive-head">
+          <div class="paper-head__index mono" data-reveal><span>05</span><span>/ 05</span></div>
+          <div>
+            <p class="kicker mono" data-reveal>THE ARCHIVE / 轨道档案</p>
+            <h2 class="display" data-reveal data-delay="1">吸引子的<br><em>六种签名。</em></h2>
+          </div>
+          <p class="archive-head__intro" data-reveal data-delay="2">不同的方程，相似的悖论。有些坠入混沌，有些回到周期。进入任意一个吸引子的观测台，改变参数，观察秩序如何变形。</p>
+        </header>
+
+        <div class="archive-grid">
+          <a class="archive-card archive-card--wide" href="#observatory" data-open-system="lorenz" data-reveal>
+            <div class="archive-card__visual">
+              <canvas class="attractor-canvas" data-system-canvas="lorenz" aria-hidden="true"></canvas>
+              <span class="archive-card__index mono">01 / LORENZ</span>
+              <span class="archive-card__open mono">开启观测 ↗</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-card__title"><h3>蝴蝶 <em>The Butterfly</em></h3><span class="mono">1963</span></div>
+              <p>大气对流的极简模型。两片翅膀状的吸引子，把天气预报变成了一个哲学问题。</p>
+              <div class="archive-card__tags mono"><span>3D FLOW</span><span>σ=10 · ρ=28 · β=8/3</span><span>λ₁ &gt; 0</span></div>
+            </div>
+          </a>
+
+          <a class="archive-card" href="#observatory" data-open-system="rossler" data-reveal data-delay="1">
+            <div class="archive-card__visual">
+              <canvas class="attractor-canvas" data-system-canvas="rossler" aria-hidden="true"></canvas>
+              <span class="archive-card__index mono">02 / RÖSSLER</span>
+              <span class="archive-card__open mono">开启观测 ↗</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-card__title"><h3>丝带 <em>The Ribbon</em></h3><span class="mono">1976</span></div>
+              <p>一条被折叠的细带。只有一项非线性，却足以把轨道织成无穷。</p>
+              <div class="archive-card__tags mono"><span>3D FLOW</span><span>a=.2 · b=.2 · c=5.7</span></div>
+            </div>
+          </a>
+
+          <a class="archive-card" href="#observatory" data-open-system="aizawa" data-reveal>
+            <div class="archive-card__visual">
+              <canvas class="attractor-canvas" data-system-canvas="aizawa" aria-hidden="true"></canvas>
+              <span class="archive-card__index mono">03 / AIZAWA</span>
+              <span class="archive-card__open mono">开启观测 ↗</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-card__title"><h3>环风 <em>The Current</em></h3><span class="mono">1982</span></div>
+              <p>一圈发光的涡环，中心栖息着被风穿透的混沌核心。秩序与湍流在同一坐标里共存。</p>
+              <div class="archive-card__tags mono"><span>TORUS + CHAOS</span><span>6 PARAMETERS</span></div>
+            </div>
+          </a>
+
+          <a class="archive-card archive-card--wide" href="#observatory" data-open-system="thomas" data-reveal data-delay="1">
+            <div class="archive-card__visual">
+              <canvas class="attractor-canvas" data-system-canvas="thomas" aria-hidden="true"></canvas>
+              <span class="archive-card__index mono">04 / THOMAS</span>
+              <span class="archive-card__open mono">开启观测 ↗</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-card__title"><h3>编织 <em>The Weave</em></h3><span class="mono">1999</span></div>
+              <p>三个正弦互相缠绕，像一台永远织不完的机器。轻盈、对称，却在每一层褶皱里藏着分歧。</p>
+              <div class="archive-card__tags mono"><span>CYCLICALLY SYMMETRIC</span><span>b=.208186</span><span>λ₁ &gt; 0</span></div>
+            </div>
+          </a>
+
+          <a class="archive-card" href="#observatory" data-open-system="halvorsen" data-reveal>
+            <div class="archive-card__visual">
+              <canvas class="attractor-canvas" data-system-canvas="halvorsen" aria-hidden="true"></canvas>
+              <span class="archive-card__index mono">05 / HALVORSEN</span>
+              <span class="archive-card__open mono">开启观测 ↗</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-card__title"><h3>三叶 <em>The Trefoil</em></h3><span class="mono">2000</span></div>
+              <p>三条对称的臂彼此牵引。经典参数下，它收敛成一条稳定的周期轨道；吸引子，并不必然混沌。</p>
+              <div class="archive-card__tags mono"><span>PERIODIC ATTRACTOR</span><span>a=1.89</span><span>λ₁ ≈ 0</span></div>
+            </div>
+          </a>
+
+          <a class="archive-card" href="#observatory" data-open-system="chen" data-reveal data-delay="1">
+            <div class="archive-card__visual">
+              <canvas class="attractor-canvas" data-system-canvas="chen" aria-hidden="true"></canvas>
+              <span class="archive-card__index mono">06 / CHEN</span>
+              <span class="archive-card__open mono">开启观测 ↗</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-card__title"><h3>双翼 <em>The Twin Wing</em></h3><span class="mono">1999</span></div>
+              <p>洛伦茨的远亲，却拓扑不等价。它证明了蝴蝶的形状不止一种，混沌也有自己的方言。</p>
+              <div class="archive-card__tags mono"><span>3D FLOW</span><span>a=35 · b=3 · c=28</span></div>
+            </div>
+          </a>
+        </div>
+
+        <p class="archive-disclaimer mono" data-reveal>所有预览均由浏览器实时积分并投影生成，不是预渲染图像。点击任意卡片，将对应的系统载入观测台。</p>
+      </div>
+    </section>
+
+    <!-- CODA -->
+    <section class="coda">
+      <div class="coda__orbit" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="container coda__inner">
+        <p class="kicker mono" data-reveal>CODA / 尾声</p>
+        <h2 class="display" data-reveal data-delay="1">能被完全预测的未来，<br>只是<em>尚未被拉长</em>的<span class="coda-last">现在。</span></h2>
+        <div class="coda__row" data-reveal data-delay="2">
+          <p>混沌并未摧毁决定论。它只是告诉我们：知道规则，并不等于知道结局。在有限的精度与无限的折叠之间，世界保留了它的神秘。</p>
+          <a class="primary-button primary-button--large" href="#observatory">
+            <span>再去扰动一次 <em>RETURN TO THE LAB</em></span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+      <div class="coda__ticker" aria-hidden="true">
+        <div class="coda__ticker-track"><span>混沌是一首精确的诗</span><i>✳</i><span>CHAOS IS AN EXACT POETRY</span><i>✳</i><span>混沌是一首精确的诗</span><i>✳</i><span>CHAOS IS AN EXACT POETRY</span><i>✳</i></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <div class="container">
+      <div class="foot-top">
+        <a class="brand brand--foot" href="#top" aria-label="混沌测绘志，回到顶部">
+          <span class="brand__mark">λ</span>
+          <span class="brand__words"><span class="brand__cn">混沌测绘志</span><span class="brand__en">CHAOS ATLAS</span></span>
+        </a>
+        <button class="back-to-top mono" id="backToTop" type="button"><span>BACK TO TOP</span><span aria-hidden="true">↑</span></button>
+      </div>
+      <div class="foot-grid">
+        <div class="foot-note">
+          <span class="mono">ABOUT THIS ATLAS</span>
+          <p>一本关于非线性动力学的互动图谱。页面中的每一条轨道、每一个李雅普诺夫指数，均由你的设备实时计算——没有视频，也没有预渲染动画。</p>
+        </div>
+        <div class="foot-note">
+          <span class="mono">METHOD</span>
+          <p>四阶龙格–库塔积分；变分方程与 QR 正交化估算李雅普诺夫谱；逻辑斯蒂映射采用 1000 步暂态与 210 次迭代采样。</p>
+        </div>
+        <div class="foot-note">
+          <span class="mono">REFERENCES</span>
+          <p>Lorenz, E. N. (1963). Deterministic Nonperiodic Flow.<br>Rössler, O. E. (1976). An Equation for Continuous Chaos.<br>Benettin, G. et al. (1980). Lyapunov Characteristic Exponents.</p>
+        </div>
+        <div class="foot-note foot-note--meta">
+          <span class="mono">OBSERVATORY STATUS</span>
+          <p><span class="live-pill live-pill--light"><i></i> COMPUTING</span><br><span id="footClock">--:--:-- CST</span></p>
+        </div>
+      </div>
+      <div class="foot-bottom mono">
+        <span>© MMXXVI · CHAOS ATLAS / 混沌测绘志</span>
+        <span>VOL. 01 — STRANGE ATTRACTORS &amp; LYAPUNOV EXPONENTS</span>
+        <span>42.3601° N / 71.0942° W — CAMBRIDGE, MA</span>
+      </div>
+    </div>
+  </footer>
+
+  <noscript>
+    <style>
+      #preloader{display:none!important}
+      body.is-locked{overflow:auto!important}
+      [data-reveal]{opacity:1!important;transform:none!important}
+      .hero__char,.hero__eyebrow,.hero__subtitle,.hero__aside,.hero__bottom,.hero__side-label,.hero__scroll,.hero__title-mark{opacity:1!important;transform:none!important}
+      .hero__canvas-wrap canvas{opacity:1!important}
+      .cursor{display:none!important}
+    </style>
+    <div class="no-js mono">实时动力学需要 JavaScript。请启用它，以观看吸引子开始呼吸。</div>
+  </noscript>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
